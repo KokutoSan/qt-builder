@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main", "qt-5.12.5" ]
+    branches: [ "qt-5.12.5" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "qt-5.12.5" ]
 
 jobs:
 
