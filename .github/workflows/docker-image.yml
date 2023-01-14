@@ -9,18 +9,22 @@ on:
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
         lfs: true
+
+    - name: Build Docker image
+      run: docker build . --file Dockerfile --tag qt-builder:5.12.5-$(date +%s)
+
     - name: Login to DockerHub
-      env:
-        DOCKER_USER: ${{secrets.DOCKER_USER}}
-        DOCKER_TOKEN: ${{secrets.DOCKER_TOKEN}}
-      run: docker login -u $DOCKER_USER -p $DOCKER_TOKEN
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag qt-builder:$(date +%s)
+      uses: docker/login-action@v1 
+      with:
+        username: ${{secrets.DOCKER_USER}}
+        password: ${{secrets.DOCKER_TOKEN}}
+
+    - name: Publish Docker image to DockerHub
+      run: docker image push kokutosan/qt-builder:5.12.5
 
