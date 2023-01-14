@@ -15,6 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Login to DockerHub
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_TOKEN: ${{secrets.DOCKER_TOKEN}}
       run: docker login -u $DOCKER_USER -p $DOCKER_TOKEN
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag qt-builder:$(date +%s)
