@@ -1,10 +1,10 @@
 name: Docker Image Qt CI
 
 on:
-  push:
-    branches: [ "qt-5.12.5" ]
-  pull_request:
-    branches: [ "qt-5.12.5" ]
+  workflow_run:
+    workflows: [Docker Image Qt Runtime]
+    types:
+      - completed
 
 jobs:
 
@@ -20,7 +20,7 @@ jobs:
       run: docker build . --file Dockerfile.qt-ci --tag ${{secrets.DOCKER_USER}}/qt-ci:5.12.5
 
     - name: Login to DockerHub
-      uses: docker/login-action@v1 
+      uses: docker/login-action@v2 
       with:
         username: ${{secrets.DOCKER_USER}}
         password: ${{secrets.DOCKER_TOKEN}}
