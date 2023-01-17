@@ -5,6 +5,8 @@ on:
     workflows: [Docker Image Qt Runtime]
     types:
       - completed
+    branches:
+      - qt-5.12.5
 
 jobs:
 
