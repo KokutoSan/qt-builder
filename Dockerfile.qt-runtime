@@ -1,0 +1,71 @@
+####################
+# Builder          #
+####################
+FROM centos:7.9.2009 as builder
+
+# Install CentOS SCL
+RUN yum install -y centos-release-scl
+
+# Install Python 3.8
+RUN yum install -y rh-python38.x86_64 rh-python38-python-pip.noarch
+
+# Install A Qt Install
+RUN source /opt/rh/rh-python38/enable && pip3 install aqtinstall
+
+# Install Qt5.12.5
+RUN source /opt/rh/rh-python38/enable && \
+    mkdir /opt/Qt5.12.5 && \
+    aqt install-qt linux desktop 5.12.5 gcc_64 -O /opt/Qt5.12.5
+
+####################
+# Qt Runtime Image #
+####################
+FROM centos:7.9.2009
+
+####################
+# Build arguments  #
+####################
+ARG USERNAME=qt
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Configure Yum repository for CentOS 
+COPY etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo 
+
+# Downgrade nss-softokn 
+RUN yum downgrade -y nss-softokn-freebl.x86_64 nss-softokn.x86_64 nss.x86_64 nss-sysinit.x86_64 nss-tools.x86_64
+
+# Install dependencies
+RUN yum install -y xcb-util.x86_64 xcb-util-image.x86_64 xcb-util-keysyms.x86_64 xcb-util-wm.x86_64 libxcb.x86_64 \
+                   xcb-util-renderutil.x86_64 libXau.x86_64 libXrender.x86_64 libX11.x86_64 libX11-common.noarch \
+		   libxkbcommon.x86_64 libxkbcommon-x11.x86_64 xkeyboard-config.noarch fontconfig.x86_64 \
+                   dejavu-fonts-common.noarch dejavu-sans-fonts.noarch fontpackages-filesystem.noarch \
+                   freetype.x86_64 libpng.x86_64 libXext.x86_64 libSM.x86_64 libICE.x86_64 bzip2.x86_64 \
+		   libglvnd-glx.x86_64 hwdata.x86_64 libXdamage.x86_64 libXfixes.x86_64 libXxf86vm.x86_64 \
+                   libdrm.x86_64 libglvnd.x86_64 libpciaccess.x86_64 libxshmfence.x86_64 mesa-libGL.x86_64 \
+                   mesa-libglapi.x86_64 zlib.x86_64 mesa-dri-drivers.x86_64 llvm-private.x86_64 mesa-filesystem.x86_64 \
+                   libglvnd-egl.x86_64 libwayland-client.x86_64 libwayland-server.x86_64 mesa-libEGL.x86_64 \
+                   mesa-libgbm.x86_64 libglvnd-opengl.x86_64 libglvnd-gles.x86_64 mesa-libxatracker.x86_64 \
+                   glx-utils.x86_64 libXinerama.x86_64 kbd.x86_64 which file
+
+# Configure D-Bus to avoid an issue when exporting X11
+RUN dbus-uuidgen --ensure
+
+# Copy Qt from builder
+COPY --from=builder /opt/Qt5.12.5 /opt/Qt5.12.5
+
+# Go to non-root user
+RUN groupadd --gid $USER_GID $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME 
+
+RUN mkdir -p /run/user/$USER_UID && chown $USER_UID:$USER_GID /run/user/$USER_UID
+
+USER $USERNAME
+WORKDIR /home/$USERNAME 
+
+# Update bashrc
+RUN echo "export PATH=$PATH:/opt/Qt5.12.5/5.12.5/gcc_64/bin" >> .bashrc && \
+    echo "export LD_LIBRARY_PATH=/opt/Qt5.12.5/5.12.5/gcc_64/lib" >> .bashrc && \
+    echo "export XDG_RUNTIME_DIR=/run/user/$USER_UID" >> .bashrc
+
+CMD ["/bin/bash"]

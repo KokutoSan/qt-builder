@@ -1,0 +1,30 @@
+name: Docker Image Qt Runtime
+
+on:
+  push:
+    branches: [ "qt-5.12.5" ]
+  pull_request:
+    branches: [ "qt-5.12.5" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        lfs: true
+
+    - name: Build Docker image
+      run: docker build . --file Dockerfile.qt-runtime --tag ${{secrets.DOCKER_USER}}/qt-runtime:5.12.5
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{secrets.DOCKER_USER}}
+        password: ${{secrets.DOCKER_TOKEN}}
+
+    - name: Publish Docker image to DockerHub
+      run: docker image push ${{secrets.DOCKER_USER}}/qt-runtime:5.12.5
+

@@ -1,0 +1,51 @@
+####################
+# Qt CI Image      #
+####################
+FROM kokutosan/qt-runtime:5.12.5
+
+####################
+# Build arguments  #
+####################
+ARG USERNAME=qt
+
+# Go to root
+USER root
+
+# Install dependencies
+RUN yum install -y bluez-libs.x86_64 avahi-libs.x86_64 \
+                   cups-libs.x86_64 graphite2.x86_64 \
+                   harfbuzz.x86_64 \
+                   libXi.x86_64 \
+                   libjpeg-turbo.x86_64 libtool-ltdl.x86_64 \
+                   mariadb-libs.x86_64 \
+                   pcre2-utf16.x86_64 glibc.i686 \
+                   unixODBC.x86_64 libicu.x86_64 \
+                   python3.x86_64 python3-libs.x86_64 \
+                   python3-pip.noarch python3-setuptools.noarch emacs-filesystem.noarch \
+                   libdrm-devel.x86_64 mesa-libGL-devel zlib-devel.x86_64 \
+                   libssh2-devel alsa-lib git make
+
+# Install CentOS SCL
+RUN yum install -y centos-release-scl
+
+# Install devtoolset-8
+RUN yum install -y devtoolset-8
+
+# Copy CMake3.17.5 RPMs
+COPY RPMS/ /root/RPMS/
+
+# Install CMake3
+RUN cd /root/RPMS && yum install -y cmake3-3.17.5-1.el7.x86_64.rpm cmake3-data-3.17.5-1.el7.noarch.rpm \
+                                    cmake3-doc-3.17.5-1.el7.noarch.rpm libuv-1.30.1-1.el7.x86_64.rpm \
+                                    libzstd-1.5.2-1.el7.x86_64.rpm rhash-1.3.4-2.el7.x86_64.rpm
+RUN rm -rf /root/RPMS && \
+    ln -s /usr/bin/cmake3 /usr/bin/cmake 
+
+# Go to non-root user
+USER $USERNAME
+WORKDIR /home/$USERNAME 
+
+# Update bashrc
+RUN echo "source /opt/rh/devtoolset-8/enable" >> .bashrc
+
+CMD ["/bin/bash"]
