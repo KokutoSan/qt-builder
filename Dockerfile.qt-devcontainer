@@ -1,0 +1,37 @@
+####################
+# Qt Dev Image     #
+####################
+FROM kokutosan/qt-ci:5.12.5
+
+####################
+# Build arguments  #
+####################
+ARG USERNAME=qt
+
+# Go to root
+USER root
+WORKDIR /root
+
+# Install wget
+RUN yum install -y wget.x86_64
+
+# Download p7zip
+RUN wget --no-check-certificate https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-16.02-20.el7.x86_64.rpm
+
+# Install p7zip
+RUN yum install -y p7zip-16.02-20.el7.x86_64.rpm 
+
+# Download Qt Creator 4.10.0 compatible with Qt5.12.5
+RUN wget --no-check-certificate https://download.qt.io/archive/qtcreator/4.10/4.10.0/installer_source/linux_gcc_64_rhel72/qtcreator.7z
+
+# Install Qt Creator 4.10.0
+RUN cd /opt/Qt5.12.5 && mkdir -p Tools/QtCreator && cd Tools/QtCreator && 7za x /root/qtcreator.7z
+
+# Go to non-root user
+USER $USERNAME
+WORKDIR /home/$USERNAME 
+
+# Update bashrc
+RUN echo "export PATH=\$PATH:/opt/Qt5.12.5/Tools/QtCreator/bin" >> .bashrc
+
+CMD ["/bin/bash"]

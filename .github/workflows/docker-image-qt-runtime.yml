@@ -3,8 +3,6 @@ name: Docker Image Qt Runtime
 on:
   push:
     branches: [ "qt-5.12.5" ]
-  pull_request:
-    branches: [ "qt-5.12.5" ]
 
 jobs:
 
